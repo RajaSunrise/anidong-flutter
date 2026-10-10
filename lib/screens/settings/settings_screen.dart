@@ -1,8 +1,11 @@
 // lib/screens/settings/settings_screen.dart
+
+import 'package:anidong/data/services/database_helper.dart';
+import 'package:anidong/data/services/scraping_service.dart';
 import 'package:anidong/providers/theme_provider.dart';
+import 'package:anidong/utils/app_colors.dart';
 import 'package:anidong/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
-import 'package:anidong/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -13,18 +16,15 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _selectedQuality = 'Auto';
-  bool _wifiOnlyDownload = true;
-  bool _autoDownload = false;
+  bool _notificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Removed to allow theme to handle it
       body: Stack(
         children: [
           Container(
-            height: MediaQuery.of(context).size.height * 0.3,
+            height: MediaQuery.of(context).size.height * 0.28,
             width: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -41,25 +41,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16.0, 56.0, 16.0, 24.0),
+                    padding: const EdgeInsets.fromLTRB(16.0, 36.0, 16.0, 24.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           '⚙️ Settings',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: 26,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white, // Keep white on gradient
+                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Customize your experience',
+                          'Kelola preferensi dan data aplikasi AniDong',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.white.withValues(
-                                alpha: 0.8), // Keep white on gradient
+                            color: Colors.white.withValues(alpha: 0.85),
                           ),
                         ),
                       ],
@@ -71,10 +70,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildAppearanceCard(context),
-                        const SizedBox(height: 24),
-                        _buildVideoQualityCard(context),
-                        const SizedBox(height: 24),
-                        _buildDownloadSettingsCard(context),
+                        const SizedBox(height: 16),
+                        _buildNotificationsCard(context),
+                        const SizedBox(height: 16),
+                        _buildStorageDataCard(context),
+                        const SizedBox(height: 16),
+                        _buildAboutCard(context),
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -96,18 +97,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-            child: Text(
-              'Appearance',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+            child: Row(
+              children: [
+                const Icon(Icons.palette_outlined, color: AppColors.accent),
+                const SizedBox(width: 8),
+                Text(
+                  'Tampilan',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                ),
+              ],
             ),
           ),
           _buildSwitchTile(
             context: context,
-            title: 'Dark Mode',
-            subtitle: 'Use dark theme',
+            title: 'Mode Gelap',
+            subtitle: 'Gunakan tema gelap untuk kenyamanan mata',
             value: themeProvider.isDarkMode,
             onChanged: (bool value) {
               themeProvider.toggleTheme(value);
@@ -118,80 +125,153 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildVideoQualityCard(BuildContext context) {
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Video Quality',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-            ),
-          ),
-          RadioGroup<String>(
-            groupValue: _selectedQuality,
-            onChanged: (String? newValue) {
-              if (newValue != null) {
-                setState(() {
-                  _selectedQuality = newValue;
-                });
-              }
-            },
-            child: Column(
-              children: const [
-                _QualityRadioTile('Auto'),
-                _QualityRadioTile('1080p'),
-                _QualityRadioTile('720p'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDownloadSettingsCard(BuildContext context) {
+  Widget _buildNotificationsCard(BuildContext context) {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-            child: Text(
-              'Download Settings',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+            child: Row(
+              children: [
+                const Icon(Icons.notifications_active_outlined,
+                    color: AppColors.accent),
+                const SizedBox(width: 8),
+                Text(
+                  'Notifikasi',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                ),
+              ],
             ),
           ),
           _buildSwitchTile(
             context: context,
-            title: 'WiFi only',
-            subtitle: 'Download only on WiFi',
-            value: _wifiOnlyDownload,
+            title: 'Notifikasi Episode Baru',
+            subtitle: 'Dapatkan pemberitahuan saat episode favorit dirilis',
+            value: _notificationsEnabled,
             onChanged: (bool value) {
               setState(() {
-                _wifiOnlyDownload = value;
+                _notificationsEnabled = value;
               });
             },
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStorageDataCard(BuildContext context) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
+            child: Row(
+              children: [
+                const Icon(Icons.storage_outlined, color: AppColors.accent),
+                const SizedBox(width: 8),
+                Text(
+                  'Penyimpanan & Data',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            title: Text(
+              'Hapus Riwayat Tontonan',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            subtitle: Text(
+              'Bersihkan riwayat episode yang telah Anda tonton',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                    fontSize: 13,
+                  ),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: AppColors.accent),
+            onTap: () => _showClearHistoryDialog(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAboutCard(BuildContext context) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: AppColors.accent),
+                const SizedBox(width: 8),
+                Text(
+                  'Tentang Aplikasi',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            title: Text(
+              'Versi Aplikasi',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            trailing: Text(
+              'v1.0.0',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ),
           Divider(color: Theme.of(context).dividerColor, height: 1),
-          _buildSwitchTile(
-            context: context,
-            title: 'Auto Download',
-            subtitle: 'Automatically download new episodes',
-            value: _autoDownload,
-            onChanged: (bool value) {
-              setState(() {
-                _autoDownload = value;
-              });
-            },
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            title: Text(
+              'Sumber Anoboy Base URL',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            subtitle: Text(
+              ScrapingService.anoboyBaseUrl,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+          Divider(color: Theme.of(context).dividerColor, height: 1),
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            title: Text(
+              'Sumber Anichin Base URL',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            subtitle: Text(
+              ScrapingService.anichinBaseUrl,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ),
         ],
       ),
@@ -245,26 +325,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-}
 
-// Widget helper untuk RadioListTile (tanpa groupValue & onChanged)
-class _QualityRadioTile extends StatelessWidget {
-  final String value;
-
-  const _QualityRadioTile(this.value);
-
-  @override
-  Widget build(BuildContext context) {
-    return RadioListTile<String>(
-      title: Text(
-        value,
-        style: Theme.of(context).textTheme.bodyLarge,
+  Future<void> _showClearHistoryDialog(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Riwayat'),
+        content: const Text(
+          'Apakah Anda yakin ingin menghapus seluruh riwayat tontonan?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
-      value: value,
-      // Tidak perlu groupValue dan onChanged → ditangani oleh RadioGroup ancestor
-      activeColor: AppColors.accent,
-      contentPadding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
     );
+
+    if (confirmed == true && mounted) {
+      await DatabaseHelper().clearHistory();
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Riwayat tontonan berhasil dihapus.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 }

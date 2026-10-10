@@ -77,14 +77,21 @@ class ScrapingService {
     return '$base$url';
   }
 
-  String _extractImageUrl(Element? imgElement) {
+  String _extractImageUrl(Element? imgElement, {String? baseUrl}) {
     if (imgElement == null) return '';
     String thumb = imgElement.attributes['data-src'] ??
         imgElement.attributes['data-lazy-src'] ??
         imgElement.attributes['src'] ??
         '';
 
-    return _normalizeUrl(thumb, anoboyBaseUrl);
+    if (thumb.isEmpty) {
+      final srcset = imgElement.attributes['srcset'];
+      if (srcset != null && srcset.isNotEmpty) {
+        thumb = srcset.split(',').first.trim().split(' ').first;
+      }
+    }
+
+    return _normalizeUrl(thumb, baseUrl ?? anoboyBaseUrl);
   }
 
   Future<List<Episode>> getAnoboyRecentEpisodes({int page = 1}) async {
@@ -179,7 +186,7 @@ class ScrapingService {
               h2 != null ? h2.text.trim() : titleElement.text.trim();
           final rawUrl = linkElement.attributes['href'] ?? '';
           final url = _normalizeUrl(rawUrl, anichinBaseUrl);
-          final thumb = imgElement?.attributes['src'] ?? '';
+          final thumb = _extractImageUrl(imgElement, baseUrl: anichinBaseUrl);
           final epText = epElement?.text.trim() ?? '';
 
           if (epText.contains('Ep 0') && !epText.contains('Ep 01')) continue;
@@ -317,7 +324,7 @@ class ScrapingService {
           final title = h2 != null ? h2.text.trim() : titleElement.text.trim();
           final rawUrl = linkElement.attributes['href'] ?? '';
           final url = _normalizeUrl(rawUrl, anichinBaseUrl);
-          final thumb = imgElement?.attributes['src'] ?? '';
+          final thumb = _extractImageUrl(imgElement, baseUrl: anichinBaseUrl);
 
           String status = 'ongoing';
           final statusEl = element.querySelector('.status') ??
@@ -546,7 +553,7 @@ class ScrapingService {
         document.querySelector('div[itemprop="image"] img');
 
     if (imgEl != null) {
-      final extracted = _extractImageUrl(imgEl);
+      final extracted = _extractImageUrl(imgEl, baseUrl: anichinBaseUrl);
       if (extracted.isNotEmpty) {
         coverImage = extracted;
       }
@@ -568,8 +575,7 @@ class ScrapingService {
       final numText = epEl.querySelector('.epl-num')?.text.trim() ?? '';
       final title = epEl.querySelector('.epl-title')?.text.trim() ?? '';
 
-      String? thumb = epEl.querySelector('img')?.attributes['src'];
-      thumb ??= epEl.querySelector('img')?.attributes['data-src'];
+      String thumb = _extractImageUrl(epEl.querySelector('img'), baseUrl: anichinBaseUrl);
 
       if (url.isNotEmpty) {
         final absoluteUrl = _normalizeUrl(url, anichinBaseUrl);
@@ -1989,7 +1995,7 @@ class ScrapingService {
           final title = h2 != null ? h2.text.trim() : titleElement.text.trim();
           final rawUrl = linkElement.attributes['href'] ?? '';
           final url = _normalizeUrl(rawUrl, anichinBaseUrl);
-          final thumb = imgElement?.attributes['src'] ?? '';
+          final thumb = _extractImageUrl(imgElement, baseUrl: anichinBaseUrl);
 
           String status = 'ongoing';
           final statusEl = element.querySelector('.status') ??
@@ -2099,7 +2105,7 @@ class ScrapingService {
               final img = item.querySelector('img');
               final title = a?.attributes['title']?.trim() ?? '';
               final linkUrl = a?.attributes['href'] ?? '';
-              final imgUrl = img?.attributes['src'] ?? '';
+              final imgUrl = _extractImageUrl(img, baseUrl: anichinBaseUrl);
 
               if (title.isNotEmpty && linkUrl.isNotEmpty) {
                 // Determine absolute URL
@@ -2153,7 +2159,7 @@ class ScrapingService {
           for (var item in items) {
             final title = item.querySelector('.tt')?.text.trim() ?? '';
             final link = item.querySelector('a')?.attributes['href'] ?? '';
-            final img = item.querySelector('img')?.attributes['src'] ?? '';
+            final img = _extractImageUrl(item.querySelector('img'), baseUrl: anichinBaseUrl);
 
             if (title.isNotEmpty && link.isNotEmpty) {
               final absoluteUrl = _normalizeUrl(link, anichinBaseUrl);
@@ -2202,7 +2208,7 @@ class ScrapingService {
                 final title = link.text.trim();
                 final rawUrl = link.attributes['href'] ?? '';
                 final url = _normalizeUrl(rawUrl, anichinBaseUrl);
-                final img = link.querySelector('img')?.attributes['src'] ?? '';
+                final img = _extractImageUrl(link.querySelector('img'), baseUrl: anichinBaseUrl);
                 if (title.isNotEmpty && url.isNotEmpty) {
                   final absoluteUrl = _normalizeUrl(url, anichinBaseUrl);
                   schedule[currentDay]!.add(
