@@ -6,10 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('SettingsScreen has working RadioListTiles and Switches',
+  testWidgets('SettingsScreen displays theme, notifications, storage and version info',
       (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues(
-        {}); // Mock SharedPreferences for ThemeProvider
+    SharedPreferences.setMockInitialValues({}); // Mock SharedPreferences for ThemeProvider
 
     await tester.pumpWidget(
       ChangeNotifierProvider(
@@ -20,44 +19,30 @@ void main() {
       ),
     );
 
-    // Verify RadioListTiles are working
-    expect(find.text('Auto'), findsOneWidget);
-    expect(find.text('1080p'), findsOneWidget);
-    expect(find.text('720p'), findsOneWidget);
+    // Verify section headers
+    expect(find.text('Tampilan'), findsOneWidget);
+    expect(find.text('Notifikasi'), findsOneWidget);
+    expect(find.text('Penyimpanan & Data'), findsOneWidget);
+    expect(find.text('Tentang Aplikasi'), findsOneWidget);
 
-    // Initial state: Auto is selected
-    final radioGroupFinder = find.byType(RadioGroup<String>);
-    final radioGroup = tester.widget<RadioGroup<String>>(radioGroupFinder);
-    expect(radioGroup.groupValue, 'Auto');
+    // Verify switches (Dark Mode, New Episode Notifications)
+    expect(find.byType(Switch), findsNWidgets(2));
 
-    // Tap to change quality
-    await tester.tap(find.text('1080p'));
+    // Verify App version and Clear History
+    expect(find.text('Hapus Riwayat Tontonan'), findsOneWidget);
+    expect(find.text('v1.0.0'), findsOneWidget);
+
+    // Tap dark mode switch
+    final darkModeSwitchFinder = find.byType(Switch).first;
+    await tester.tap(darkModeSwitchFinder);
     await tester.pumpAndSettle();
 
-    // Verify RadioGroup state updated
-    final updatedRadioGroup =
-        tester.widget<RadioGroup<String>>(radioGroupFinder);
-    expect(updatedRadioGroup.groupValue, '1080p');
-
-    // Verify Switches (Dark Mode, WiFi only, Auto Download)
-    expect(find.byType(Switch), findsNWidgets(3));
-
-    // Initial switch states (WiFi only is default true)
-    // Dark Mode (index 0) defaults to true in ThemeProvider mock/init
-    // WiFi Only (index 1) defaults to true in SettingsScreen state
-
-    final wifiSwitchFinder =
-        find.byType(Switch).at(1); // WiFi Only is the second switch now
-    final wifiSwitch = tester.widget<Switch>(wifiSwitchFinder);
-    expect(wifiSwitch.value, true);
-
-    // Tap a switch (WiFi only)
-    await tester.ensureVisible(wifiSwitchFinder);
-    await tester.tap(wifiSwitchFinder);
+    // Tap notification switch
+    final notifSwitchFinder = find.byType(Switch).at(1);
+    final initialNotifValue = tester.widget<Switch>(notifSwitchFinder).value;
+    await tester.tap(notifSwitchFinder);
     await tester.pumpAndSettle();
-
-    // Verify switch state updated
-    final updatedWifiSwitch = tester.widget<Switch>(wifiSwitchFinder);
-    expect(updatedWifiSwitch.value, false);
+    final updatedNotifValue = tester.widget<Switch>(notifSwitchFinder).value;
+    expect(updatedNotifValue, !initialNotifValue);
   });
 }

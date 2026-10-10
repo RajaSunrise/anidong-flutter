@@ -1,5 +1,6 @@
 import 'package:anidong/data/models/show_model.dart';
 import 'package:anidong/data/services/api_service.dart';
+import 'package:anidong/screens/show_details_screen.dart';
 import 'package:anidong/utils/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -217,48 +218,74 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Widget _buildShowCard(Show show) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: show.coverImageUrl != null && show.coverImageUrl!.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: show.coverImageUrl!,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    // Performance: Grid items optimized with 300px width caching.
-                    memCacheWidth: 300,
-                    placeholder: (context, url) =>
-                        Container(color: AppColors.surface),
-                    errorWidget: (context, url, error) => Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ShowDetailsScreen(show: show),
+          ),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: show.coverImageUrl != null &&
+                      show.coverImageUrl!.isNotEmpty &&
+                      show.coverImageUrl!.startsWith('http')
+                  ? CachedNetworkImage(
+                      imageUrl: show.coverImageUrl!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      memCacheWidth: 300,
+                      placeholder: (context, url) => Container(
+                        color: AppColors.surface,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: AppColors.surface,
+                        child: const Center(
+                          child: Icon(
+                            Icons.movie,
+                            color: AppColors.secondaryText,
+                            size: 40,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Container(
                       color: AppColors.surface,
-                      child: const Icon(Icons.error,
-                          color: AppColors.secondaryText),
+                      child: const Center(
+                        child: Icon(
+                          Icons.movie,
+                          color: AppColors.secondaryText,
+                          size: 40,
+                        ),
+                      ),
                     ),
-                  )
-                : Container(
-                    color: AppColors.surface,
-                    child: const Center(
-                      child: Icon(Icons.movie,
-                          color: AppColors.secondaryText, size: 40),
-                    ),
-                  ),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          show.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppColors.primaryText,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+          const SizedBox(height: 8),
+          Text(
+            show.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.primaryText,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
