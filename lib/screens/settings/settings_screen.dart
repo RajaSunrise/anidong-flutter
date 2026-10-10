@@ -327,6 +327,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _showClearHistoryDialog(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -352,14 +353,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (confirmed == true && mounted) {
       await DatabaseHelper().clearHistory();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Riwayat tontonan berhasil dihapus.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Riwayat tontonan berhasil dihapus.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 }
